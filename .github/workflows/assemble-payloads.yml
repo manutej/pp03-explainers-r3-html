@@ -1,0 +1,30 @@
+name: Assemble payloads
+on:
+  push:
+    paths: ['payloads/*.part*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Concatenate
+        run: |
+          set -euo pipefail
+          for stem in v02-zero-few-shot v03-nshot-limits v04-chain-of-thought v05-step-back v06-meta-chaining v07-reflexion; do
+            if [ -f payloads/${stem}.json.part0 ]; then
+              cat payloads/${stem}.json.part0 payloads/${stem}.json.part1 payloads/${stem}.json.part2 > payloads/${stem}.json
+              rm -f payloads/${stem}.json.part*
+              echo "assembled payloads/${stem}.json $(wc -c < payloads/${stem}.json)"
+            fi
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add payloads/
+          git diff --staged --quiet && echo no changes && exit 0
+          git commit -m "Assemble gzip payloads from parts"
+          git push
