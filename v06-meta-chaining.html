@@ -1,8 +1,9 @@
 <!DOCTYPE html><html><head><meta charset=utf-8><title>v06-meta-chaining.html</title>
 <script>
 (async()=>{
-const b64=await (await fetch('/payloads/v06-meta-chaining.b64')).text();
-const bin=Uint8Array.from(atob(b64.trim()),c=>c.charCodeAt(0));
+const parts=await Promise.all([0,1,2].map(i=>fetch('/payloads/v06-meta-chaining.b64.p'+i).then(r=>r.text())));
+const b64=parts.join('').trim();
+const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
 const html=await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
 document.open();document.write(html);document.close();
 })().catch(e=>{document.body.textContent='Inflate failed: '+e;});
