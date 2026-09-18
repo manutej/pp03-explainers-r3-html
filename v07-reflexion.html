@@ -1,10 +1,30 @@
-<!DOCTYPE html><html><head><meta charset=utf-8><title>v07-reflexion.html</title>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Reflexion</title></head>
+<body>
+<p id="s">Loading…</p>
 <script>
-(async()=>{
-const parts=await Promise.all([0,1,2].map(i=>fetch('/payloads/v07-reflexion.b64.p'+i).then(r=>r.text())));
-const b64=parts.join('').replace(/\s+/g,'');
-const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
-const html=await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-document.open();document.write(html);document.close();
-})().catch(e=>{document.body.textContent='Inflate failed: '+e;});
-</script></head><body>Loading…</body></html>
+(async () => {
+  const stem = 'v07-reflexion';
+  const n = 6;
+  try {
+    const parts = await Promise.all(
+      Array.from({length:n}, (_,i) =>
+        fetch('/payloads/' + stem + '.b64.p' + i).then(r => {
+          if (!r.ok) throw new Error('part ' + i + ' ' + r.status);
+          return r.text();
+        })
+      )
+    );
+    const b64 = parts.join('').replace(/\s+/g, '');
+    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const ds = new DecompressionStream('gzip');
+    const stream = new Blob([bin]).stream().pipeThrough(ds);
+    const html = await new Response(stream).text();
+    document.open(); document.write(html); document.close();
+  } catch (e) {
+    document.getElementById('s').textContent = 'Failed: ' + e;
+    console.error(e);
+  }
+})();
+</script>
+</body></html>
